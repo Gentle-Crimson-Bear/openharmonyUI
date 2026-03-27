@@ -28,87 +28,63 @@ struct HarmonyDeviceCard2x4 {
   @LocalStorageProp('secondaryButtonOpacity') secondaryButtonOpacity: string = '1'
 
   @Builder
-  devicePanel(deviceId: string, name: string, room: string, param: string, onlineText: string, onlineColor: string,
-    icon: string, buttonIcon: string, buttonBg: string, buttonOpacity: string) {
+  devicePanel(deviceId: string, name: string, param: string, onlineText: string, icon: string,
+    buttonIcon: string, buttonBg: string, buttonOpacity: string) {
     Row() {
       Image($rawfile(icon))
-        .width(44)
-        .height(44)
-        .margin({ right: 12 })
+        .width(36)
+        .height(36)
+        .objectFit(ImageFit.Contain)
+        .margin({ right: 10 })
 
       Column() {
         Row() {
-          Column() {
-            Text(name)
-              .fontSize(15)
-              .fontWeight(FontWeight.Bold)
-              .fontColor('#1A1A1A')
-              .maxLines(1)
-              .textOverflow({ overflow: TextOverflow.Ellipsis })
+          Text(name)
+            .layoutWeight(1)
+            .fontSize(12)
+            .fontWeight(FontWeight.Bold)
+            .fontColor('#1A1A1A')
+            .maxLines(1)
+            .textOverflow({ overflow: TextOverflow.Ellipsis })
 
-            Text(room)
-              .fontSize(11)
-              .fontColor('#7B7F86')
-              .margin({ top: 4 })
-          }
-          .alignItems(HorizontalAlign.Start)
-          .layoutWeight(1)
-
-          Row() {
-            Image($rawfile(onlineText === '在线' ? 'dot_online.png' : 'dot_offline.png'))
-              .width(8)
-              .height(8)
-              .margin({ right: 4 })
-            Text(onlineText)
-              .fontSize(11)
-              .fontColor(onlineColor)
-          }
+          Image($rawfile(onlineText === '在线' ? 'dot_online.png' : 'dot_offline.png'))
+            .width(8)
+            .height(8)
+            .margin({ left: 6 })
         }
         .width('100%')
 
         Text(param)
-          .fontSize(12)
+          .width('100%')
+          .fontSize(9)
           .fontColor('#6B7280')
           .maxLines(1)
           .textOverflow({ overflow: TextOverflow.Ellipsis })
-          .margin({ top: 10 })
+          .margin({ top: 6 })
       }
       .layoutWeight(1)
+      .alignItems(HorizontalAlign.Start)
       .onClick(() => {
-        postCardAction(this, {
-          action: 'router',
-          abilityName: 'EntryAbility',
-          params: {
-            targetDeviceId: deviceId
-          }
-        })
+        this.routeToDevice(deviceId)
       })
 
       Button() {
         Image($rawfile(buttonIcon))
-          .width(20)
-          .height(20)
+          .width(16)
+          .height(16)
       }
-      .width(48)
-      .height(48)
-      .borderRadius(24)
+      .width(36)
+      .height(36)
+      .borderRadius(18)
       .backgroundColor(buttonBg)
       .opacity(Number(buttonOpacity))
-      .margin({ left: 12 })
+      .margin({ left: 10 })
       .onClick(() => {
-        if (onlineText === '在线') {
-          postCardAction(this, {
-            action: 'message',
-            params: {
-              operation: 'toggle',
-              deviceId: deviceId
-            }
-          })
-        }
+        this.postToggleAction(deviceId, onlineText)
       })
     }
     .width('100%')
-    .padding({ left: 16, right: 16, top: 14, bottom: 14 })
+    .padding({ left: 12, right: 12, top: 10, bottom: 10 })
     .borderRadius(20)
     .border({ width: 1, color: '#52FFFFFF' })
     .backgroundColor('#D9FFFFFF')
@@ -122,48 +98,58 @@ struct HarmonyDeviceCard2x4 {
         .height('100%')
         .objectFit(ImageFit.Cover)
 
-      Column() {
-        Row() {
-          Column() {
-            Text(this.title)
-              .fontSize(16)
-              .fontWeight(FontWeight.Bold)
-              .fontColor('#1A1A1A')
-            Text(this.subtitle)
-              .fontSize(11)
-              .fontColor('#6B7280')
-              .margin({ top: 4 })
-          }
-          .alignItems(HorizontalAlign.Start)
-          .layoutWeight(1)
+      Column({ space: 8 }) {
+        Text('智能家居')
+          .width('100%')
+          .fontSize(13)
+          .fontWeight(FontWeight.Bold)
+          .fontColor('#1A1A1A')
+          .maxLines(1)
+          .textOverflow({ overflow: TextOverflow.Ellipsis })
 
-          Text(this.updatedAt)
-            .fontSize(10)
-            .fontColor('#8B8F97')
+        Column({ space: 8 }) {
+          this.devicePanel(this.primaryId, this.primaryName, this.primaryParam, this.primaryOnlineText,
+            this.primaryIcon, this.primaryButtonIcon, this.primaryButtonBg, this.primaryButtonOpacity)
+          this.devicePanel(this.secondaryId, this.secondaryName, this.secondaryParam, this.secondaryOnlineText,
+            this.secondaryIcon, this.secondaryButtonIcon, this.secondaryButtonBg, this.secondaryButtonOpacity)
         }
         .width('100%')
-        .margin({ bottom: 14 })
-
-        Column({ space: 12 }) {
-          this.devicePanel(this.primaryId, this.primaryName, this.primaryRoom, this.primaryParam, this.primaryOnlineText,
-            this.primaryOnlineColor, this.primaryIcon, this.primaryButtonIcon, this.primaryButtonBg, this.primaryButtonOpacity)
-          this.devicePanel(this.secondaryId, this.secondaryName, this.secondaryRoom, this.secondaryParam, this.secondaryOnlineText,
-            this.secondaryOnlineColor, this.secondaryIcon, this.secondaryButtonIcon, this.secondaryButtonBg,
-            this.secondaryButtonOpacity)
-        }
-        .width('100%')
-        .padding(18)
-        .borderRadius(24)
-        .border({ width: 1, color: '#66FFFFFF' })
-        .backgroundColor('#B8FFFFFF')
-        .shadow({ radius: 20, color: '#26000000', offsetX: 0, offsetY: 8 })
+        .layoutWeight(1)
       }
       .width('100%')
       .height('100%')
-      .padding(16)
-      .backgroundColor('#1A101826')
+      .padding({ left: 12, right: 12, top: 12, bottom: 12 })
+      .borderRadius(24)
+      .border({ width: 1, color: '#66FFFFFF' })
+      .backgroundColor('#B8FFFFFF')
+      .shadow({ radius: 20, color: '#26000000', offsetX: 0, offsetY: 8 })
     }
     .width('100%')
     .height('100%')
+    .padding(8)
+    .backgroundColor('#16101826')
+  }
+
+  routeToDevice(deviceId: string): void {
+    postCardAction(this, {
+      action: 'router',
+      abilityName: 'EntryAbility',
+      params: {
+        targetDeviceId: deviceId
+      }
+    })
+  }
+
+  postToggleAction(deviceId: string, onlineText: string): void {
+    if (onlineText !== '在线') {
+      return
+    }
+    postCardAction(this, {
+      action: 'message',
+      params: {
+        operation: 'toggle',
+        deviceId: deviceId
+      }
+    })
   }
 }

@@ -26,115 +26,97 @@ struct HarmonyDeviceCard2x2 {
 
       Column() {
         Row() {
-          Column() {
-            Text(this.title)
-              .fontSize(16)
-              .fontWeight(FontWeight.Bold)
-              .fontColor('#1A1A1A')
-            Text(this.subtitle)
-              .fontSize(11)
-              .fontColor('#6B7280')
-              .margin({ top: 4 })
-          }
-          .alignItems(HorizontalAlign.Start)
-          .layoutWeight(1)
-
-          Text(this.updatedAt)
-            .fontSize(10)
-            .fontColor('#8B8F97')
-        }
-        .width('100%')
-        .margin({ bottom: 14 })
-
-        Column() {
-          Row() {
-            Image($rawfile(this.deviceIcon))
-              .width(52)
-              .height(52)
-              .margin({ right: 12 })
-
-            Column() {
-              Text(this.deviceName)
-                .fontSize(17)
-                .fontWeight(FontWeight.Bold)
-                .fontColor('#1A1A1A')
-                .maxLines(1)
-                .textOverflow({ overflow: TextOverflow.Ellipsis })
-
-              Text(this.deviceRoom)
-                .fontSize(12)
-                .fontColor('#7B7F86')
-                .margin({ top: 4 })
-
-              Row() {
-                Image($rawfile(this.deviceOnlineText === '在线' ? 'dot_online.png' : 'dot_offline.png'))
-                  .width(8)
-                  .height(8)
-                  .margin({ right: 4 })
-                Text(this.deviceOnlineText)
-                  .fontSize(12)
-                  .fontColor(this.deviceOnlineColor)
-              }
-              .margin({ top: 8 })
-            }
-            .alignItems(HorizontalAlign.Start)
+          Text('智能家居')
             .layoutWeight(1)
-          }
-          .width('100%')
-          .onClick(() => {
-            postCardAction(this, {
-              action: 'router',
-              abilityName: 'EntryAbility',
-              params: {
-                targetDeviceId: this.deviceId
-              }
-            })
-          })
-
-          Text(this.deviceParam)
-            .width('100%')
-            .fontSize(13)
-            .fontColor('#6B7280')
+            .fontSize(12)
+            .fontWeight(FontWeight.Bold)
+            .fontColor('#1A1A1A')
             .maxLines(1)
             .textOverflow({ overflow: TextOverflow.Ellipsis })
-            .margin({ top: 18, bottom: 18 })
+
+          Row() {
+            Image($rawfile(this.deviceOnlineText === '在线' ? 'dot_online.png' : 'dot_offline.png'))
+              .width(8)
+              .height(8)
+          }
+          .width(18)
+          .height(18)
+          .justifyContent(FlexAlign.Center)
+          .borderRadius(9)
+          .backgroundColor('#26FFFFFF')
+        }
+        .width('100%')
+
+        Column({ space: 10 }) {
+          Image($rawfile(this.deviceIcon))
+            .width(48)
+            .height(48)
+            .objectFit(ImageFit.Contain)
+
+          Text(this.deviceName)
+            .width('100%')
+            .fontSize(13)
+            .fontWeight(FontWeight.Medium)
+            .fontColor('#1A1A1A')
+            .textAlign(TextAlign.Center)
+            .maxLines(1)
+            .textOverflow({ overflow: TextOverflow.Ellipsis })
 
           Button() {
             Image($rawfile(this.deviceButtonIcon))
-              .width(22)
-              .height(22)
+              .width(18)
+              .height(18)
           }
-          .width(54)
-          .height(54)
-          .borderRadius(27)
+          .width(42)
+          .height(42)
+          .borderRadius(21)
           .opacity(Number(this.deviceButtonOpacity))
           .backgroundColor(this.deviceButtonBg)
-          .alignSelf(ItemAlign.End)
           .onClick(() => {
-            if (this.deviceOnlineText === '在线') {
-              postCardAction(this, {
-                action: 'message',
-                params: {
-                  operation: 'toggle',
-                  deviceId: this.deviceId
-                }
-              })
-            }
+            this.postToggleAction()
           })
         }
         .width('100%')
-        .padding(18)
-        .borderRadius(24)
-        .border({ width: 1, color: '#66FFFFFF' })
-        .backgroundColor('#B8FFFFFF')
-        .shadow({ radius: 20, color: '#26000000', offsetX: 0, offsetY: 8 })
+        .layoutWeight(1)
+        .justifyContent(FlexAlign.Center)
+        .onClick(() => {
+          this.routeToDevice()
+        })
       }
       .width('100%')
       .height('100%')
-      .padding(16)
-      .backgroundColor('#1A101826')
+      .padding({ left: 12, right: 12, top: 12, bottom: 12 })
+      .borderRadius(24)
+      .border({ width: 1, color: '#66FFFFFF' })
+      .backgroundColor('#B8FFFFFF')
+      .shadow({ radius: 20, color: '#26000000', offsetX: 0, offsetY: 8 })
     }
     .width('100%')
     .height('100%')
+    .padding(8)
+    .backgroundColor('#16101826')
+  }
+
+  routeToDevice(): void {
+    postCardAction(this, {
+      action: 'router',
+      abilityName: 'EntryAbility',
+      params: {
+        targetDeviceId: this.deviceId
+      }
+    })
+  }
+
+  postToggleAction(): void {
+    if (this.deviceOnlineText !== '在线') {
+      return
+    }
+    postCardAction(this, {
+      action: 'message',
+      params: {
+        operation: 'toggle',
+        deviceId: this.deviceId
+      }
+    })
   }
 }
