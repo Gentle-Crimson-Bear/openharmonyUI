@@ -30,3 +30,4 @@
 
 - 当前设备数据主要来自 mock 数据，适合演示 UI、交互和卡片联动。
 - 仓库已支持 GitHub Copilot PR review，可通过 `.github/copilot-instructions.md` 提供审查上下文。
+- 使用DevEco Studio和其他AI工具（DevEco CodeGenie/Code Arkts/Trae等）进行代码开发
