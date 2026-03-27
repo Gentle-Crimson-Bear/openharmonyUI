@@ -1,43 +1,28 @@
 // 智能家居设备控制面板 - 严格对齐设计稿
 import { promptAction } from '@kit.ArkUI'
+import { DeviceItemData } from '../model/DeviceItemData'
+import { DeviceMockRepository } from '../mock/DeviceMockRepository'
 
-// 设备数据模型
-@Observed
-class DeviceItemData {
-  id: number
-  name: string
-  icon: string        // rawfile 图标文件名
-  isOnline: boolean
-  isOn: boolean
-  paramLabel: string   // 参数文本，如 "亮度75%"
-  type: 'power' | 'play' // 控制按钮类型
-  room: string
-
-  constructor(id: number, name: string, icon: string, isOnline: boolean, isOn: boolean,
-    paramLabel: string, type: 'power' | 'play', room: string) {
-    this.id = id
-    this.name = name
-    this.icon = icon
-    this.isOnline = isOnline
-    this.isOn = isOn
-    this.paramLabel = paramLabel
-    this.type = type
-    this.room = room
-  }
-}
+const PHONE_PADDING: number = 16
+const LANDSCAPE_PADDING: number = 20
+const TABLET_PADDING: number = 24
+const PHONE_LIST_SPACE: number = 12
+const TABLET_LIST_SPACE: number = 16
+const TABLET_BREAKPOINT: number = 840
 
 // ===== 设备卡片组件（独立封装，可复用） =====
 @Component
 struct DeviceCard {
   @ObjectLink device: DeviceItemData
+  isTabletLayout: boolean = false
   onToggle: () => void = () => {}
 
   build() {
     Row() {
       // 左侧：设备图标
       Image($rawfile(this.device.icon))
-        .width(60)
-        .height(60)
+        .width(this.getIconSize())
+        .height(this.getIconSize())
         .objectFit(ImageFit.Contain)
         .margin({ right: 12 })
 
@@ -78,8 +63,8 @@ struct DeviceCard {
 
       // 右侧：控制按钮
       Image($rawfile(this.getButtonIcon()))
-        .width(40)
-        .height(40)
+        .width(this.getActionSize())
+        .height(this.getActionSize())
         .objectFit(ImageFit.Contain)
         .margin({ left: 12 })
         .opacity(this.device.isOnline ? 1.0 : 0.4)
@@ -91,7 +76,7 @@ struct DeviceCard {
         })
     }
     .width('100%')
-    .padding({ left: 16, right: 16, top: 20, bottom: 20 })
+    .padding({ left: 16, right: 16, top: this.getVerticalPadding(), bottom: this.getVerticalPadding() })
     .borderRadius(20)
     .backdropBlur(60)
     .backgroundColor('#B3FFFFFF')  // 半透明白色毛玻璃效果
@@ -101,6 +86,18 @@ struct DeviceCard {
       offsetX: 0,
       offsetY: 4
     })
+  }
+
+  getIconSize(): number {
+    return this.isTabletLayout ? 64 : 60
+  }
+
+  getActionSize(): number {
+    return this.isTabletLayout ? 44 : 40
+  }
+
+  getVerticalPadding(): number {
+    return this.isTabletLayout ? 22 : 20
   }
 
   getButtonIcon(): string {
@@ -118,14 +115,15 @@ struct DeviceCard {
 @Entry
 @Component
 struct Index {
-  @State devices: DeviceItemData[] = [
-    new DeviceItemData(1, '客厅主灯', 'icon_light.png', true, true, '亮度75%', 'power', '客厅'),
-    new DeviceItemData(2, '卧室空调', 'icon_ac_unit.png', true, true, '温度26°C  制冷', 'power', '卧室'),
-    new DeviceItemData(3, '客厅窗帘', 'icon_curtain.png', true, false, '位置50%', 'power', '客厅'),
-    new DeviceItemData(4, '扫地机器人', 'icon_robot.png', true, true, '电量80%  清洁中', 'play', '全屋'),
-  ]
-
+  @State devices: DeviceItemData[] = DeviceMockRepository.getInitialDevices()
   @State isRefreshing: boolean = false
+  @State refreshRound: number = 0
+  @State laneCount: number = 1
+  @State pagePadding: number = PHONE_PADDING
+  @State listSpace: number = PHONE_LIST_SPACE
+  @State titleFontSize: number = 24
+  @State titleTopPadding: number = 12
+  @State isTabletLayout: boolean = false
 
   build() {
     Stack() {
@@ -139,19 +137,26 @@ struct Index {
       Column() {
         // 标题
         Text('我的智能设备')
-          .fontSize(24)
+          .fontSize(this.titleFontSize)
           .fontWeight(FontWeight.Bold)
           .fontColor('#1A1A1A')
           .width('100%')
-          .padding({ left: 20, top: 12, bottom: 16 })
+          .padding({ top: this.titleTopPadding, bottom: 16 })
+
+        Text(`已连接 ${this.devices.length} 台设备`)
+          .fontSize(14)
+          .fontColor('#5F6368')
+          .width('100%')
+          .margin({ bottom: 14 })
 
         // 设备卡片列表 - 支持下拉刷新
         Refresh({ refreshing: $$this.isRefreshing }) {
-          List({ space: 12 }) {
+          List({ space: this.listSpace }) {
             ForEach(this.devices, (device: DeviceItemData) => {
               ListItem() {
                 DeviceCard({
                   device: device,
+                  isTabletLayout: this.isTabletLayout,
                   onToggle: () => {
                     this.toggleDevice(device)
                   }
@@ -160,35 +165,65 @@ struct Index {
             }, (device: DeviceItemData) => device.id.toString())
           }
           .width('100%')
-          .padding({ left: 16, right: 16, bottom: 20 })
-          .lanes(1)
+          .padding({ bottom: 20 })
+          .lanes(this.laneCount)
         }
         .onRefreshing(() => {
-          // 模拟刷新
           setTimeout(() => {
-            this.devices.forEach(d => {
-              d.isOnline = true
-            })
+            this.refreshRound += 1
+            this.devices = DeviceMockRepository.getDevicesForRound(this.refreshRound)
             this.isRefreshing = false
-            promptAction.showToast({ message: '设备状态已刷新', duration: 2000 })
-          }, 1500)
+            promptAction.showToast({
+              message: `设备状态已刷新，当前共${this.devices.length}台设备`,
+              duration: 2000
+            })
+          }, 1200)
         })
         .layoutWeight(1)
       }
+      .padding({ left: this.pagePadding, right: this.pagePadding })
       .width('100%')
       .height('100%')
+      .onAreaChange((_, value) => {
+        this.updateResponsiveLayout(value.width, value.height)
+      })
     }
     .width('100%')
     .height('100%')
   }
 
+  normalizeSize(value: Length): number {
+    if (typeof value === 'number') {
+      return value > 0 ? value : 0
+    }
+    if (typeof value === 'string') {
+      const size: number = parseFloat(value)
+      return size > 0 ? size : 0
+    }
+    return 0
+  }
+
+  updateResponsiveLayout(widthValue: Length, heightValue: Length) {
+    const width: number = this.normalizeSize(widthValue)
+    const height: number = this.normalizeSize(heightValue)
+    if (width === 0 || height === 0) {
+      return
+    }
+
+    const isLandscape: boolean = width > height
+    const isTablet: boolean = Math.min(width, height) >= TABLET_BREAKPOINT || width >= 1024
+
+    this.laneCount = isLandscape ? 2 : 1
+    this.pagePadding = isTablet ? TABLET_PADDING : (isLandscape ? LANDSCAPE_PADDING : PHONE_PADDING)
+    this.listSpace = isTablet ? TABLET_LIST_SPACE : PHONE_LIST_SPACE
+    this.titleFontSize = isTablet ? 28 : 24
+    this.titleTopPadding = isTablet ? 20 : 12
+    this.isTabletLayout = isTablet
+  }
+
   toggleDevice(device: DeviceItemData) {
     device.isOn = !device.isOn
-    // 更新参数文本
-    if (device.type === 'play') {
-      device.paramLabel = device.isOn ? '电量80%  清洁中' : '电量80%  已暂停'
-    }
-    // Toast 提示
+    DeviceMockRepository.updateDeviceAfterToggle(device)
     promptAction.showToast({
       message: `${device.name}状态已更新`,
       duration: 3000

@@ -1,0 +1,22 @@
+{
+  description: '智能家居设备 mock 数据，覆盖任务书要求的 6+ 设备类型',
+  schema: {
+    id: 'number',
+    name: 'string',
+    icon: 'string',
+    room: 'string',
+    category: 'string',
+    type: 'power | play',
+    defaultOn: 'boolean',
+  },
+  devices: [
+    { id: 1, name: '客厅主灯', icon: 'icon_light.png', room: '客厅', category: 'light', type: 'power', defaultOn: true },
+    { id: 2, name: '卧室空调', icon: 'icon_ac_unit.png', room: '卧室', category: 'ac', type: 'power', defaultOn: true },
+    { id: 3, name: '客厅窗帘', icon: 'icon_curtain.png', room: '客厅', category: 'curtain', type: 'power', defaultOn: false },
+    { id: 4, name: '扫地机器人', icon: 'icon_robot.png', room: '全屋', category: 'robot', type: 'play', defaultOn: true },
+    { id: 5, name: '玄关门锁', icon: 'icon_ac.png', room: '玄关', category: 'lock', type: 'power', defaultOn: true },
+    { id: 6, name: '儿童房加湿器', icon: 'icon_ac.png', room: '儿童房', category: 'humidifier', type: 'power', defaultOn: true },
+    { id: 7, name: '餐厅音箱', icon: 'icon_light.png', room: '餐厅', category: 'speaker', type: 'play', defaultOn: false },
+    { id: 8, name: '阳台摄像头', icon: 'icon_robot.png', room: '阳台', category: 'camera', type: 'power', defaultOn: true },
+  ],
+}
