@@ -18,113 +18,123 @@ struct HarmonyDeviceCard2x2 {
   @LocalStorageProp('deviceButtonOpacity') deviceButtonOpacity: string = '1'
 
   build() {
-    Column() {
-      Row() {
-        Column() {
-          Text(this.title)
-            .fontSize(16)
-            .fontWeight(FontWeight.Bold)
-            .fontColor('#1A1A1A')
-          Text(this.subtitle)
-            .fontSize(11)
-            .fontColor('#6B7280')
-            .margin({ top: 4 })
-        }
-        .alignItems(HorizontalAlign.Start)
-        .layoutWeight(1)
-
-        Text(this.updatedAt)
-          .fontSize(10)
-          .fontColor('#8B8F97')
-      }
-      .width('100%')
-      .margin({ bottom: 14 })
+    Stack() {
+      Image($rawfile('bg.png'))
+        .width('100%')
+        .height('100%')
+        .objectFit(ImageFit.Cover)
 
       Column() {
         Row() {
-          Image($rawfile(this.deviceIcon))
-            .width(52)
-            .height(52)
-            .margin({ right: 12 })
-
           Column() {
-            Text(this.deviceName)
-              .fontSize(17)
+            Text(this.title)
+              .fontSize(16)
               .fontWeight(FontWeight.Bold)
               .fontColor('#1A1A1A')
-              .maxLines(1)
-              .textOverflow({ overflow: TextOverflow.Ellipsis })
-
-            Text(this.deviceRoom)
-              .fontSize(12)
-              .fontColor('#7B7F86')
+            Text(this.subtitle)
+              .fontSize(11)
+              .fontColor('#6B7280')
               .margin({ top: 4 })
-
-            Row() {
-              Image($rawfile(this.deviceOnlineText === '在线' ? 'dot_online.png' : 'dot_offline.png'))
-                .width(8)
-                .height(8)
-                .margin({ right: 4 })
-              Text(this.deviceOnlineText)
-                .fontSize(12)
-                .fontColor(this.deviceOnlineColor)
-            }
-            .margin({ top: 8 })
           }
           .alignItems(HorizontalAlign.Start)
           .layoutWeight(1)
+
+          Text(this.updatedAt)
+            .fontSize(10)
+            .fontColor('#8B8F97')
         }
         .width('100%')
-        .onClick(() => {
-          postCardAction(this, {
-            action: 'router',
-            abilityName: 'EntryAbility',
-            params: {
-              targetDeviceId: this.deviceId
+        .margin({ bottom: 14 })
+
+        Column() {
+          Row() {
+            Image($rawfile(this.deviceIcon))
+              .width(52)
+              .height(52)
+              .margin({ right: 12 })
+
+            Column() {
+              Text(this.deviceName)
+                .fontSize(17)
+                .fontWeight(FontWeight.Bold)
+                .fontColor('#1A1A1A')
+                .maxLines(1)
+                .textOverflow({ overflow: TextOverflow.Ellipsis })
+
+              Text(this.deviceRoom)
+                .fontSize(12)
+                .fontColor('#7B7F86')
+                .margin({ top: 4 })
+
+              Row() {
+                Image($rawfile(this.deviceOnlineText === '在线' ? 'dot_online.png' : 'dot_offline.png'))
+                  .width(8)
+                  .height(8)
+                  .margin({ right: 4 })
+                Text(this.deviceOnlineText)
+                  .fontSize(12)
+                  .fontColor(this.deviceOnlineColor)
+              }
+              .margin({ top: 8 })
             }
-          })
-        })
-
-        Text(this.deviceParam)
+            .alignItems(HorizontalAlign.Start)
+            .layoutWeight(1)
+          }
           .width('100%')
-          .fontSize(13)
-          .fontColor('#6B7280')
-          .maxLines(1)
-          .textOverflow({ overflow: TextOverflow.Ellipsis })
-          .margin({ top: 18, bottom: 18 })
-
-        Button() {
-          Image($rawfile(this.deviceButtonIcon))
-            .width(22)
-            .height(22)
-        }
-        .width(54)
-        .height(54)
-        .borderRadius(27)
-        .opacity(Number(this.deviceButtonOpacity))
-        .backgroundColor(this.deviceButtonBg)
-        .alignSelf(ItemAlign.End)
-        .onClick(() => {
-          if (this.deviceOnlineText === '在线') {
+          .onClick(() => {
             postCardAction(this, {
-              action: 'message',
+              action: 'router',
+              abilityName: 'EntryAbility',
               params: {
-                operation: 'toggle',
-                deviceId: this.deviceId
+                targetDeviceId: this.deviceId
               }
             })
+          })
+
+          Text(this.deviceParam)
+            .width('100%')
+            .fontSize(13)
+            .fontColor('#6B7280')
+            .maxLines(1)
+            .textOverflow({ overflow: TextOverflow.Ellipsis })
+            .margin({ top: 18, bottom: 18 })
+
+          Button() {
+            Image($rawfile(this.deviceButtonIcon))
+              .width(22)
+              .height(22)
           }
-        })
+          .width(54)
+          .height(54)
+          .borderRadius(27)
+          .opacity(Number(this.deviceButtonOpacity))
+          .backgroundColor(this.deviceButtonBg)
+          .alignSelf(ItemAlign.End)
+          .onClick(() => {
+            if (this.deviceOnlineText === '在线') {
+              postCardAction(this, {
+                action: 'message',
+                params: {
+                  operation: 'toggle',
+                  deviceId: this.deviceId
+                }
+              })
+            }
+          })
+        }
+        .width('100%')
+        .padding(18)
+        .borderRadius(24)
+        .border({ width: 1, color: '#66FFFFFF' })
+        .backgroundColor('#B8FFFFFF')
+        .shadow({ radius: 20, color: '#26000000', offsetX: 0, offsetY: 8 })
       }
       .width('100%')
-      .padding(18)
-      .borderRadius(24)
-      .backgroundColor('#F7F9FB')
-      .shadow({ radius: 16, color: '#19000000', offsetX: 0, offsetY: 6 })
+      .height('100%')
+      .padding(16)
+      .backgroundColor('#1A101826')
     }
     .width('100%')
     .height('100%')
-    .padding(16)
-    .backgroundColor('#E9F1F6')
   }
 }

@@ -110,44 +110,60 @@ struct HarmonyDeviceCard2x4 {
     .width('100%')
     .padding({ left: 16, right: 16, top: 14, bottom: 14 })
     .borderRadius(20)
-    .backgroundColor('#F7F9FB')
+    .border({ width: 1, color: '#52FFFFFF' })
+    .backgroundColor('#D9FFFFFF')
+    .shadow({ radius: 12, color: '#12000000', offsetX: 0, offsetY: 4 })
   }
 
   build() {
-    Column() {
-      Row() {
-        Column() {
-          Text(this.title)
-            .fontSize(16)
-            .fontWeight(FontWeight.Bold)
-            .fontColor('#1A1A1A')
-          Text(this.subtitle)
-            .fontSize(11)
-            .fontColor('#6B7280')
-            .margin({ top: 4 })
+    Stack() {
+      Image($rawfile('bg.png'))
+        .width('100%')
+        .height('100%')
+        .objectFit(ImageFit.Cover)
+
+      Column() {
+        Row() {
+          Column() {
+            Text(this.title)
+              .fontSize(16)
+              .fontWeight(FontWeight.Bold)
+              .fontColor('#1A1A1A')
+            Text(this.subtitle)
+              .fontSize(11)
+              .fontColor('#6B7280')
+              .margin({ top: 4 })
+          }
+          .alignItems(HorizontalAlign.Start)
+          .layoutWeight(1)
+
+          Text(this.updatedAt)
+            .fontSize(10)
+            .fontColor('#8B8F97')
         }
-        .alignItems(HorizontalAlign.Start)
-        .layoutWeight(1)
+        .width('100%')
+        .margin({ bottom: 14 })
 
-        Text(this.updatedAt)
-          .fontSize(10)
-          .fontColor('#8B8F97')
+        Column({ space: 12 }) {
+          this.devicePanel(this.primaryId, this.primaryName, this.primaryRoom, this.primaryParam, this.primaryOnlineText,
+            this.primaryOnlineColor, this.primaryIcon, this.primaryButtonIcon, this.primaryButtonBg, this.primaryButtonOpacity)
+          this.devicePanel(this.secondaryId, this.secondaryName, this.secondaryRoom, this.secondaryParam, this.secondaryOnlineText,
+            this.secondaryOnlineColor, this.secondaryIcon, this.secondaryButtonIcon, this.secondaryButtonBg,
+            this.secondaryButtonOpacity)
+        }
+        .width('100%')
+        .padding(18)
+        .borderRadius(24)
+        .border({ width: 1, color: '#66FFFFFF' })
+        .backgroundColor('#B8FFFFFF')
+        .shadow({ radius: 20, color: '#26000000', offsetX: 0, offsetY: 8 })
       }
       .width('100%')
-      .margin({ bottom: 14 })
-
-      Column({ space: 12 }) {
-        this.devicePanel(this.primaryId, this.primaryName, this.primaryRoom, this.primaryParam, this.primaryOnlineText,
-          this.primaryOnlineColor, this.primaryIcon, this.primaryButtonIcon, this.primaryButtonBg, this.primaryButtonOpacity)
-        this.devicePanel(this.secondaryId, this.secondaryName, this.secondaryRoom, this.secondaryParam, this.secondaryOnlineText,
-          this.secondaryOnlineColor, this.secondaryIcon, this.secondaryButtonIcon, this.secondaryButtonBg,
-          this.secondaryButtonOpacity)
-      }
-      .width('100%')
+      .height('100%')
+      .padding(16)
+      .backgroundColor('#1A101826')
     }
     .width('100%')
     .height('100%')
-    .padding(16)
-    .backgroundColor('#E9F1F6')
   }
 }

@@ -2,6 +2,7 @@
 import { common } from '@kit.AbilityKit'
 import { promptAction } from '@kit.ArkUI'
 import { DeviceItemData } from '../model/DeviceItemData'
+import { DeviceMockRepository } from '../mock/DeviceMockRepository'
 import { DeviceStateRepository } from '../store/DeviceStateRepository'
 
 const PHONE_PADDING: number = 16
@@ -121,10 +122,10 @@ struct DeviceCard {
 @Entry
 @Component
 struct Index {
-  private context: common.UIAbilityContext = getContext(this) as common.UIAbilityContext
-  @StorageLink('targetDeviceId') targetDeviceId: string = '0'
-  @State devices: DeviceItemData[] = []
+  @StorageProp('targetDeviceId') targetDeviceId: string = '0'
+  @State devices: DeviceItemData[] = DeviceMockRepository.getFallbackDevices()
   @State isRefreshing: boolean = false
+  @State isLoadingMore: boolean = false
   @State laneCount: number = 1
   @State pagePadding: number = PHONE_PADDING
   @State listSpace: number = PHONE_LIST_SPACE
@@ -147,6 +148,7 @@ struct Index {
         .width('100%')
         .height('100%')
         .objectFit(ImageFit.Cover)
+        .expandSafeArea([SafeAreaType.SYSTEM], [SafeAreaEdge.TOP, SafeAreaEdge.BOTTOM])
 
       // 内容层
       Column() {
@@ -192,12 +194,20 @@ struct Index {
             }, (device: DeviceItemData) => device.id.toString())
           }
           .width('100%')
+          .cachedCount(12)
           .padding({ bottom: 20 })
           .lanes(this.laneCount)
+          .onReachEnd(() => {
+            void this.loadMoreDevices()
+          })
         }
         .onRefreshing(() => {
           setTimeout(async () => {
-            this.devices = await DeviceStateRepository.refreshDevices(this.context)
+            try {
+              this.devices = await DeviceStateRepository.refreshDevices(this.getAbilityContext())
+            } catch (_error) {
+              this.devices = await DeviceMockRepository.getDevicesForRound(undefined, 1)
+            }
             this.isRefreshing = false
             promptAction.showToast({
               message: `设备状态已刷新，当前共${this.devices.length}台设备`,
@@ -206,6 +216,13 @@ struct Index {
           }, 1200)
         })
         .layoutWeight(1)
+
+        Text(this.isLoadingMore ? '正在加载更多设备...' : '滑动到底部可继续加载更多设备')
+          .fontSize(12)
+          .fontColor('#7B7F86')
+          .width('100%')
+          .textAlign(TextAlign.Center)
+          .padding({ top: 6, bottom: 10 })
       }
       .padding({ left: this.pagePadding, right: this.pagePadding })
       .width('100%')
@@ -216,6 +233,7 @@ struct Index {
     }
     .width('100%')
     .height('100%')
+    .expandSafeArea([SafeAreaType.SYSTEM], [SafeAreaEdge.TOP, SafeAreaEdge.BOTTOM])
   }
 
   normalizeSize(value: Length): number {
@@ -230,7 +248,26 @@ struct Index {
   }
 
   async loadDevices(): Promise<void> {
-    this.devices = await DeviceStateRepository.loadDevices(this.context)
+    try {
+      this.isLoadingMore = false
+      this.devices = await DeviceStateRepository.loadDevices(this.getAbilityContext())
+    } catch (_error) {
+      this.devices = DeviceMockRepository.getFallbackDevices()
+    }
+  }
+
+  async loadMoreDevices(): Promise<void> {
+    if (this.isRefreshing || this.isLoadingMore) {
+      return
+    }
+    this.isLoadingMore = true
+    try {
+      this.devices = await DeviceStateRepository.loadMoreDevices(this.getAbilityContext())
+    } catch (_error) {
+      this.devices = await DeviceMockRepository.appendDevices(undefined, this.devices, 0, 4)
+    } finally {
+      this.isLoadingMore = false
+    }
   }
 
   updateResponsiveLayout(widthValue: Length, heightValue: Length) {
@@ -261,10 +298,20 @@ struct Index {
   }
 
   async toggleDevice(device: DeviceItemData): Promise<void> {
-    this.devices = await DeviceStateRepository.toggleDevice(this.context, device.id)
+    try {
+      this.devices = await DeviceStateRepository.toggleDevice(this.getAbilityContext(), device.id)
+    } catch (_error) {
+      device.isOn = !device.isOn
+      DeviceMockRepository.updateDeviceAfterToggle(device)
+      this.devices = [...this.devices]
+    }
     promptAction.showToast({
       message: `${device.name}状态已更新`,
       duration: 3000
     })
+  }
+
+  getAbilityContext(): common.UIAbilityContext {
+    return getContext(this) as common.UIAbilityContext
   }
 }

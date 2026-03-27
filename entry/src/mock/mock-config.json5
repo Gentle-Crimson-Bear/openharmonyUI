@@ -1,4 +1,2 @@
 {
-  // Harmony mock-config.json5 is reserved for hamock source mappings.
-  // The project-specific mock dataset is kept in devices.mock.json5.
 }

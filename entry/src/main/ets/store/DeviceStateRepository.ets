@@ -10,6 +10,7 @@ const STORE_NAME: string = 'smart_home_store'
 const DEVICES_KEY: string = 'devices'
 const ROUND_KEY: string = 'refresh_round'
 const FORM_RECORDS_KEY: string = 'form_records'
+const LOAD_MORE_BATCH: number = 4
 
 class FormRecord {
   formId: string
@@ -70,10 +71,21 @@ export class DeviceStateRepository {
     let store = await DeviceStateRepository.getStore(context)
     let currentRound = Number(await store.get(ROUND_KEY, 0))
     let nextRound = currentRound + 1
-    let devices = DeviceMockRepository.getDevicesForRound(nextRound)
+    let devices = await DeviceMockRepository.getDevicesForRound(context, nextRound)
     await DeviceStateRepository.persistDevices(store, devices, nextRound)
     await DeviceStateRepository.syncRegisteredForms(context, devices)
     return devices
+  }
+
+  static async loadMoreDevices(context: common.Context, batchSize: number = LOAD_MORE_BATCH): Promise<DeviceItemData[]> {
+    await DeviceStateRepository.ensureStore(context)
+    let store = await DeviceStateRepository.getStore(context)
+    let currentRound = Number(await store.get(ROUND_KEY, 0))
+    let devices = DeviceStateRepository.restoreDevices(await store.get(DEVICES_KEY, '[]') as string)
+    let nextDevices = await DeviceMockRepository.appendDevices(context, devices, currentRound, batchSize)
+    await DeviceStateRepository.persistDevices(store, nextDevices, currentRound)
+    await DeviceStateRepository.syncRegisteredForms(context, nextDevices)
+    return nextDevices
   }
 
   static async toggleDevice(context: common.Context, deviceId: number): Promise<DeviceItemData[]> {
@@ -134,7 +146,7 @@ export class DeviceStateRepository {
     let store = await DeviceStateRepository.getStore(context)
     let rawDevices = await store.get(DEVICES_KEY, '') as string
     if (rawDevices.length === 0) {
-      let devices = DeviceMockRepository.getInitialDevices()
+      let devices = await DeviceMockRepository.getInitialDevices(context)
       await DeviceStateRepository.persistDevices(store, devices, 0)
     }
 
@@ -157,7 +169,7 @@ export class DeviceStateRepository {
 
   static restoreDevices(raw: string): DeviceItemData[] {
     if (raw.length === 0) {
-      return DeviceMockRepository.getInitialDevices()
+      return DeviceMockRepository.getFallbackDevices()
     }
     let parsed = JSON.parse(raw) as Array<Record<string, string | number | boolean>>
     let devices: DeviceItemData[] = []
@@ -261,7 +273,7 @@ export class DeviceStateRepository {
       source = devices
     }
     if (source.length === 0) {
-      let fallback = DeviceMockRepository.getInitialDevices()
+      let fallback = DeviceMockRepository.getFallbackDevices()
       return [fallback[0], fallback[1]]
     }
     if (source.length === 1) {
